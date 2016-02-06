@@ -385,13 +385,6 @@ namespace Vlc.DotNet.Forms
             }
         }
 
-
-        public int Spu
-        {
-            get { return myVlcMediaPlayer.Spu; }
-            set { myVlcMediaPlayer.Spu = value; }
-        }
-
         public void SetMedia(FileInfo file, params string[] options)
         {
             //EndInit();
