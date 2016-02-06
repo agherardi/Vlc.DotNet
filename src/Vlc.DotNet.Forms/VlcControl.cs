@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.ComponentModel;
 using System.Drawing.Design;
 using System.IO;
@@ -13,6 +13,23 @@ namespace Vlc.DotNet.Forms
     {
         private VlcMediaPlayer myVlcMediaPlayer;
 
+        #region VlcControl Init
+
+        public VlcControl()
+        {
+            InitializeComponent();
+        }
+
+        private void InitializeComponent()
+        {
+            // Init Component behaviour
+            BackColor = System.Drawing.Color.Black;
+        }
+
+        [Category("Media Player")]
+        public string[] VlcMediaplayerOptions { get; set; }
+
+        [Category("Media Player")]
         [Editor(typeof(DirectoryEditor), typeof(UITypeEditor))]
         public DirectoryInfo VlcLibDirectory { get; set; }
 
@@ -20,11 +37,22 @@ namespace Vlc.DotNet.Forms
         [Browsable(false)]
         public bool IsPlaying
         {
-            get { return myVlcMediaPlayer.IsPlaying(); }
+            get
+            {
+                if (myVlcMediaPlayer != null)
+                {
+                    return myVlcMediaPlayer.IsPlaying();
+                }
+                else
+                {
+                    return false;
+                }
+            }
         }
 
         public void BeginInit()
         {
+            // not used yet
         }
 
         public void EndInit()
@@ -35,7 +63,15 @@ namespace Vlc.DotNet.Forms
             {
                 throw new Exception("'VlcLibDirectory' must be set.");
             }
-            myVlcMediaPlayer = new VlcMediaPlayer(VlcLibDirectory);
+
+            if (VlcMediaplayerOptions == null)
+            {
+                myVlcMediaPlayer = new VlcMediaPlayer(VlcLibDirectory);
+            }
+            else
+            {
+                myVlcMediaPlayer = new VlcMediaPlayer(VlcLibDirectory, VlcMediaplayerOptions);
+            }
             myVlcMediaPlayer.VideoHostControlHandle = Handle;
             RegisterEvents();
         }
@@ -48,17 +84,31 @@ namespace Vlc.DotNet.Forms
 
         public event EventHandler<VlcLibDirectoryNeededEventArgs> VlcLibDirectoryNeeded;
 
+        bool disposed = false;
+
+        protected void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
         protected override void Dispose(bool disposing)
         {
-            if (myVlcMediaPlayer != null)
+            if (!disposed)
             {
-                UnregisterEvents();
-                if (IsPlaying)
-                    Stop();
-                myVlcMediaPlayer.Dispose();
-                myVlcMediaPlayer = null;
-                base.Dispose(disposing);
-                GC.SuppressFinalize(this);
+                if (disposing)
+                {
+                    if (myVlcMediaPlayer != null)
+                    {
+                        UnregisterEvents();
+                        if (IsPlaying)
+                            Stop();
+                        myVlcMediaPlayer.Dispose();
+                    }
+                    myVlcMediaPlayer = null;
+                    base.Dispose(disposing);
+                }
+                disposed = true;
             }
         }
 
@@ -73,103 +123,266 @@ namespace Vlc.DotNet.Forms
             }
             return null;
         }
+        #endregion
+
+        #region VlcControl Functions & Properties
 
         public void Play()
         {
-            EndInit();
-            myVlcMediaPlayer.Play();
+            //EndInit();
+            if (myVlcMediaPlayer != null)
+            {
+                myVlcMediaPlayer.Play();
+            }
         }
 
         public void Play(FileInfo file, params string[] options)
         {
-            EndInit();
-            myVlcMediaPlayer.SetMedia(file, options);
-            Play();
+            //EndInit();
+            if (myVlcMediaPlayer != null)
+            {
+                myVlcMediaPlayer.SetMedia(file, options);
+                Play();
+            }
         }
 
         public void Play(Uri uri, params string[] options)
         {
-            EndInit();
-            myVlcMediaPlayer.SetMedia(uri, options);
-            Play();
+            //EndInit();
+            if (myVlcMediaPlayer != null)
+            {
+                myVlcMediaPlayer.SetMedia(uri, options);
+                Play();
+            }
         }
 
         public void Pause()
         {
-            EndInit();
-            myVlcMediaPlayer.Pause();
+            //EndInit();
+            if (myVlcMediaPlayer != null)
+            {
+                myVlcMediaPlayer.Pause();
+            }
         }
 
         public void Stop()
         {
-            EndInit();
-            myVlcMediaPlayer.Stop();
+            //EndInit();
+            if (myVlcMediaPlayer != null)
+            {
+                myVlcMediaPlayer.Stop();
+            }
+
         }
 
         public VlcMedia GetCurrentMedia()
         {
-            EndInit();
-            return myVlcMediaPlayer.GetMedia();
+            //EndInit();
+            if (myVlcMediaPlayer != null)
+            {
+                return myVlcMediaPlayer.GetMedia();
+            }
+            else
+            {
+                return null;
+            }
+        }
+        
+        public void TakeSnapshot(string fileName) 
+        {
+            FileInfo fileInfo = new FileInfo(fileName);
+            myVlcMediaPlayer.TakeSnapshot(fileInfo);
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
         public float Position
         {
-            get { return myVlcMediaPlayer.Position; }
-            set { myVlcMediaPlayer.Position = value; }
+            get
+            {
+                if (myVlcMediaPlayer != null)
+                {
+                    return myVlcMediaPlayer.Position;
+                }
+                else
+                {
+                    return -1;
+                }
+            }
+            set
+            {
+                if (myVlcMediaPlayer != null)
+                {
+                    myVlcMediaPlayer.Position = value;
+                }
+
+            }
         }
 
+        [Browsable(false)]
         public IChapterManagement Chapter
         {
             get
             {
-                return myVlcMediaPlayer.Chapters;
+                if (myVlcMediaPlayer != null)
+                {
+                    return myVlcMediaPlayer.Chapters;
+                }
+                else
+                {
+                    return null;
+                }
             }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
         public float Rate
         {
-            get { return myVlcMediaPlayer.Rate; }
-            set { myVlcMediaPlayer.Rate = value; }
+            get
+            {
+                if (myVlcMediaPlayer != null)
+                {
+                    return myVlcMediaPlayer.Rate;
+                }
+                else
+                {
+                    return -1;
+                }
+            }
+            set
+            {
+                if (myVlcMediaPlayer != null)
+                {
+                    myVlcMediaPlayer.Rate = value;
+                }
+            }
         }
 
+        [Browsable(false)]
         public MediaStates State
         {
-            get { return myVlcMediaPlayer.State; }
+            get
+            {
+                if (myVlcMediaPlayer != null)
+                {
+                    return myVlcMediaPlayer.State;
+                }
+                else
+                {
+                    return MediaStates.NothingSpecial;
+                }
+            }
         }
 
+        [Browsable(false)]
         public ISubTitlesManagement SubTitles
         {
             get
             {
-                return myVlcMediaPlayer.SubTitles;
+                if (myVlcMediaPlayer != null)
+                {
+                    return myVlcMediaPlayer.SubTitles;
+                }
+                else
+                {
+                    return null;
+                }
+
             }
         }
 
+        [Browsable(false)]
         public IVideoManagement Video
         {
             get
             {
-                return myVlcMediaPlayer.Video;
+                if (myVlcMediaPlayer != null)
+                {
+                    return myVlcMediaPlayer.Video;
+                }
+                else
+                {
+                    return null;
+                }
             }
         }
 
+        [Browsable(false)]
         public IAudioManagement Audio
         {
             get
             {
-                return myVlcMediaPlayer.Audio;
+                if (myVlcMediaPlayer != null)
+                {
+                    return myVlcMediaPlayer.Audio;
+                }
+                else
+                {
+                    return null;
+                }
             }
         }
 
+        [Browsable(false)]
         public long Length
         {
-            get { return myVlcMediaPlayer.Length; }
+            get
+            {
+                if (myVlcMediaPlayer != null)
+                {
+                    return myVlcMediaPlayer.Length;
+                }
+                else
+                {
+                    return -1;
+                }
+
+            }
         }
 
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
+        [Browsable(false)]
         public long Time
         {
-            get { return myVlcMediaPlayer.Time; }
-            set { myVlcMediaPlayer.Time = value; }
+            get
+            {
+                if (myVlcMediaPlayer != null)
+                {
+                    return myVlcMediaPlayer.Time;
+                }
+                else
+                {
+                    return -1;
+                }
+            }
+            set
+            {
+                if (myVlcMediaPlayer != null)
+                {
+                    myVlcMediaPlayer.Time = value;
+                }
+            }
+        }
+
+        [Browsable(false)]
+        public int Spu
+        {
+            get
+            {
+                if (myVlcMediaPlayer != null)
+                {
+                    return myVlcMediaPlayer.Spu;
+                }
+                return -1;
+            }
+            set
+            {
+                if (myVlcMediaPlayer != null)
+                {
+                    myVlcMediaPlayer.Spu = value;
+                }
+            }
         }
 
 
@@ -181,14 +394,15 @@ namespace Vlc.DotNet.Forms
 
         public void SetMedia(FileInfo file, params string[] options)
         {
-            EndInit();
+            //EndInit();
             myVlcMediaPlayer.SetMedia(file, options);
         }
 
         public void SetMedia(Uri file, params string[] options)
         {
-            EndInit();
+            //EndInit();
             myVlcMediaPlayer.SetMedia(file, options);
         }
+        #endregion
     }
 }
